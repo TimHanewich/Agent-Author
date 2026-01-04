@@ -3,11 +3,6 @@ using System.Net;
 using Newtonsoft.Json;
 using TimHanewich.Foundry;
 using TimHanewich.Foundry.OpenAI.Responses;
-using AgentAuthor.ExpA;
-using AgentAuthor.ExpB;
-using AgentAuthor.ExpB.Agents;
-using AgentAuthor.ExpB.Results;
-using System.Runtime.Intrinsics.X86;
 
 namespace AgentAuthor
 {
@@ -30,12 +25,11 @@ namespace AgentAuthor
                 return;
             }
 
-            Contributor cont = new Contributor(config.Foundry, config.ModelName);
-
             //Create the book plan
             Console.WriteLine();
             Console.Write("Planning book structure... ");
-            Book b = await cont.PlanBookAsync(desc);
+            Book b = new Book();
+            await b.PlanBookAsync(desc);
             Console.WriteLine("Done! " + b.Chapters.Length.ToString() + " chapters planned.");
             Console.WriteLine();
             Console.WriteLine("Book Title: " + b.Title);
@@ -51,14 +45,14 @@ namespace AgentAuthor
             foreach (Chapter chap in b.Chapters)
             {
                 Console.Write("Planning structure for chapter '" + chap.Title + "'... ");
-                await cont.PlanChapterAsync(chap, b);
+                await chap.PlanChapterAsync(b);
                 Console.WriteLine(chap.Sections.Length.ToString() + " sections planned.");
 
                 //Write each section
                 foreach (Section sect in chap.Sections)
                 {
                     Console.Write("Writing section '" + sect.Heading + "'... ");
-                    await cont.WriteSectionAsync(sect, chap, b);
+                    await sect.WriteAsync(chap, b);
                     Console.WriteLine(sect.Content.Length.ToString("#,##0") + " characters written!");
                 }
                 Console.WriteLine();
