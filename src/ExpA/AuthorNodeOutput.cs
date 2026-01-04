@@ -1,6 +1,6 @@
 using System;
 
-namespace AgentAuthor
+namespace AgentAuthor.ExpA
 {
     public class AuthorNodeOutput
     {
