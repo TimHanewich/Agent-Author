@@ -32,7 +32,7 @@ The chapter you will work on is titled '" + chap.Title + @"'
 
 The purpose of this chapter is: " + chap.Purpose + @"'
 
-The section of this chapter you will be writing has the heading '" + Heading + @"'
+The section of this chapter you will be writing has the heading '" + Heading + @"'. I've already written in the heading, you just need to produce the content for this section now.
 
 The goal of this section is '" + Goal + @"'
 
