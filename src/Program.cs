@@ -16,7 +16,6 @@ namespace AgentAuthor
         public static void Main(string[] args)
         {
             AuthorBookAsync().Wait();
-            //ExportBook(@"C:\Users\timh\Downloads\Agent-Author\result.json", @"C:\Users\timh\Downloads\Agent-Author\export.md");
         }
 
         public static async Task AuthorBookAsync()
@@ -50,18 +49,16 @@ namespace AgentAuthor
             Console.WriteLine();
             foreach (Chapter chap in b.Chapters)
             {
-                Console.Write("Planning structure for chapter '" + chap.Title + "... ");
+                Console.Write("Planning structure for chapter '" + chap.Title + "'... ");
                 await cont.PlanChapterAsync(chap, b);
-                Console.WriteLine(chap.Sections.Length.ToString() + " sections planned!");
+                Console.WriteLine(chap.Sections.Length.ToString() + " sections planned.");
 
                 //Write each section
-                Console.WriteLine();
                 foreach (Section sect in chap.Sections)
                 {
                     Console.Write("Writing section '" + sect.Heading + "'... ");
                     await cont.WriteSectionAsync(sect, chap, b);
                     Console.WriteLine(sect.Content.Length.ToString("#,##0") + " characters written!");
-                    Console.WriteLine();
                 }
 
             }
@@ -75,18 +72,12 @@ namespace AgentAuthor
             //Export it
             string ExportPath = @"C:\Users\timh\Downloads\Agent-Author\export.md";
             Console.Write("Exporting... ");
-            ExportBook(JsonPath, ExportPath);
+            ExportBook(b, ExportPath);
             Console.WriteLine("Exported!");
         }
 
-        public static void ExportBook(string JsonPath, string ExportPath)
+        public static void ExportBook(Book b, string ExportPath)
         {
-            string content = System.IO.File.ReadAllText(JsonPath);
-            Book? b = JsonConvert.DeserializeObject<Book>(content);
-            if (b == null)
-            {
-                return;
-            }
             
             string FULL = "";
             
