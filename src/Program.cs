@@ -61,7 +61,7 @@ namespace AgentAuthor
                     await cont.WriteSectionAsync(sect, chap, b);
                     Console.WriteLine(sect.Content.Length.ToString("#,##0") + " characters written!");
                 }
-
+                Console.WriteLine();
             }
 
             //Export it
