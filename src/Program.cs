@@ -33,6 +33,7 @@ namespace AgentAuthor
             Contributor cont = new Contributor(config.Foundry, config.ModelName);
 
             //Create the book plan
+            Console.WriteLine();
             Console.Write("Planning book structure... ");
             Book b = await cont.PlanBookAsync(desc);
             Console.WriteLine("Done! " + b.Chapters.Length.ToString() + " chapters planned.");
@@ -62,12 +63,6 @@ namespace AgentAuthor
                 }
 
             }
-            
-            //Save it
-            Console.Write("Saving... ");
-            string JsonPath = @"C:\Users\timh\Downloads\Agent-Author\result.json";
-            System.IO.File.WriteAllText(JsonPath, JsonConvert.SerializeObject(b, Formatting.Indented));
-            Console.WriteLine("Saved!");
 
             //Export it
             string ExportPath = @"C:\Users\timh\Downloads\Agent-Author\export.md";
