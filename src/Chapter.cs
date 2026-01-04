@@ -17,7 +17,7 @@ namespace AgentAuthor
             Sections = new Section[]{};
         }
 
-        public async Task PlanChapterAsync(Book b) //book provided as reference
+        public async Task<InferenceResult> PlanChapterAsync(Book b) //book provided as reference
         {
             string prompt = @"
             
@@ -111,6 +111,12 @@ As you can see above, define each section that should be within this chapter, al
                 }
                 Sections = CollectedSessions.ToArray();
             }
+
+            //Return inference result
+            InferenceResult ToReturn = new InferenceResult();
+            ToReturn.InputTokensConsumed = r.InputTokensConsumed;
+            ToReturn.OutputTokensConsumed = r.OutputTokensConsumed;
+            return ToReturn;
         }
     }
 }

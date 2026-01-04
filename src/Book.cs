@@ -17,7 +17,7 @@ namespace AgentAuthor
             Chapters = new Chapter[]{};
         }
 
-        public async Task PlanBookAsync(string desired_book_info)
+        public async Task<InferenceResult> PlanBookAsync(string desired_book_info)
         {
             string prompt = @"You are the project lead for a new book that you and a team of your close contributors will author. 
             
@@ -122,6 +122,12 @@ As you can see in the example above, your job is to determine the book's title, 
                 }
                 Chapters = NewChapters.ToArray();
             }
+
+            //Return inference result
+            InferenceResult ToReturn = new InferenceResult();
+            ToReturn.InputTokensConsumed = r.InputTokensConsumed;
+            ToReturn.OutputTokensConsumed = r.OutputTokensConsumed;
+            return ToReturn;
         }        
     
     

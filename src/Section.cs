@@ -18,7 +18,7 @@ namespace AgentAuthor
             Content = string.Empty;
         }
 
-        public async Task WriteAsync(Chapter chap, Book b)
+        public async Task<InferenceResult> WriteAsync(Chapter chap, Book b)
         {
             string prompt = @"
             
@@ -86,6 +86,12 @@ As you can see above, your role is write that particular section.
             {
                 Content = prop_section_content.Value.ToString();
             }
+
+            //Return result
+            InferenceResult ToReturn = new InferenceResult();
+            ToReturn.InputTokensConsumed = r.InputTokensConsumed;
+            ToReturn.OutputTokensConsumed = r.OutputTokensConsumed;
+            return ToReturn;
         }
     }
 }
