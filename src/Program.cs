@@ -4,6 +4,10 @@ using Newtonsoft.Json;
 using TimHanewich.Foundry;
 using TimHanewich.Foundry.OpenAI.Responses;
 using AgentAuthor.ExpA;
+using AgentAuthor.ExpB;
+using AgentAuthor.ExpB.Agents;
+using AgentAuthor.ExpB.Results;
+using System.Runtime.Intrinsics.X86;
 
 namespace AgentAuthor
 {
@@ -11,65 +15,113 @@ namespace AgentAuthor
     {
         public static void Main(string[] args)
         {
-            FoundryResource fr = new FoundryResource("https://xxx.services.ai.azure.com");
-            fr.ApiKey = "6ElIJZ2j...";
+            AuthorBookAsync().Wait();
+            //ExportBook(@"C:\Users\timh\Downloads\Agent-Author\result.json", @"C:\Users\timh\Downloads\Agent-Author\export.md");
+        }
 
-            AuthorNode author = new AuthorNode(fr, "gpt-5.2", "Write a childrens book about dogs that go to heaven with 5 chapters. Delegate each chapter to another contributor.");
+        public static async Task AuthorBookAsync()
+        {
+            Configuration config = Configuration.LoadDefault();
             
-            author.WorkAsync().Wait();
-            Console.WriteLine(JsonConvert.SerializeObject(author, Formatting.Indented));
+            Console.WriteLine("Describe the book you want me to write.");
+            Console.Write("> ");
+            string? desc = Console.ReadLine();
+            if (desc == null)
+            {
+                return;
+            }
 
+            Contributor cont = new Contributor(config.Foundry, config.ModelName);
 
-            //Recursive
-            Console.WriteLine("HERE WE GO!");
-            RecursiveWorkAsync(author).Wait();
-            System.IO.File.WriteAllText(@"C:\Users\timh\Downloads\Agent-Author\result.json", JsonConvert.SerializeObject(author, Formatting.Indented));
+            //Create the book plan
+            Console.Write("Planning book structure... ");
+            Book b = await cont.PlanBookAsync(desc);
+            Console.WriteLine("Done! " + b.Chapters.Length.ToString() + " chapters planned.");
+            Console.WriteLine();
+            Console.WriteLine("Book Title: " + b.Title);
+            Console.WriteLine("Book Description: " + b.Description);
+            Console.WriteLine("Book Chapters: ");
+            foreach (Chapter chap in b.Chapters)
+            {
+                Console.WriteLine("- " + chap.Title);
+            }
+
+            //Draft out each chapter
+            Console.WriteLine();
+            foreach (Chapter chap in b.Chapters)
+            {
+                Console.Write("Planning structure for chapter '" + chap.Title + "... ");
+                await cont.PlanChapterAsync(chap, b);
+                Console.WriteLine(chap.Sections.Length.ToString() + " sections planned!");
+
+                //Write each section
+                Console.WriteLine();
+                foreach (Section sect in chap.Sections)
+                {
+                    Console.Write("Writing section '" + sect.Heading + "'... ");
+                    await cont.WriteSectionAsync(sect, chap, b);
+                    Console.WriteLine(sect.Content.Length.ToString("#,##0") + " characters written!");
+                    Console.WriteLine();
+                }
+
+            }
             
+            //Save it
+            Console.Write("Saving... ");
+            string JsonPath = @"C:\Users\timh\Downloads\Agent-Author\result.json";
+            System.IO.File.WriteAllText(JsonPath, JsonConvert.SerializeObject(b, Formatting.Indented));
+            Console.WriteLine("Saved!");
+
+            //Export it
+            string ExportPath = @"C:\Users\timh\Downloads\Agent-Author\export.md";
+            Console.Write("Exporting... ");
+            ExportBook(JsonPath, ExportPath);
+            Console.WriteLine("Exported!");
+        }
+
+        public static void ExportBook(string JsonPath, string ExportPath)
+        {
+            string content = System.IO.File.ReadAllText(JsonPath);
+            Book? b = JsonConvert.DeserializeObject<Book>(content);
+            if (b == null)
+            {
+                return;
+            }
+            
+            string FULL = "";
+            
+            //Title
+            FULL = "# " + b.Title + Environment.NewLine + b.Description;
+
+            //Table of Contents
+            FULL = FULL + Environment.NewLine + Environment.NewLine + "## TABLE OF CONTENTS" + Environment.NewLine;
+            foreach (Chapter chap in b.Chapters)
+            {
+                FULL = FULL + "- " + chap.Title + Environment.NewLine;
+            }
+            
+            //Do each chapter
+            FULL = FULL + Environment.NewLine;
+            foreach (Chapter chap in b.Chapters)
+            {
+                
+                //Chapter title
+                FULL = FULL + "## " + chap.Title + Environment.NewLine + Environment.NewLine;
+
+                //Do each section
+                foreach (Section sect in chap.Sections)
+                {
+                    FULL = FULL + "### " + sect.Heading + Environment.NewLine + sect.Content + Environment.NewLine + Environment.NewLine;
+                }
+
+                //Line after chapter
+                FULL = FULL + Environment.NewLine;
+            }
+
+            //Export!
+            System.IO.File.WriteAllText(ExportPath, FULL);
+
         }
     
-        //Returns the number of authors created
-        public static async Task<int> RecursiveWorkAsync(AuthorNode author, int depth = 0)
-        {
-            int ToReturn = 0;
-
-            //Determine tab depth
-            string Tabs = new string('\t', depth);
-            
-            //Run it
-            Console.Write(Tabs + "Running author with prompt of " + author.AssignedTask.Length.ToString("#,##0") + " charaters... ");
-            await author.WorkAsync();
-
-            //Print the results
-            if (author.writing != null && author.SubAuthors != null && author.SubAuthors.Length > 0)
-            {
-                Console.WriteLine("It decided to write " + author.writing.Length.ToString("#,##0") + " characters AND delegate to " + author.SubAuthors.Length.ToString() + " authors.");
-            }
-            else if (author.writing != null)
-            {
-                Console.WriteLine("it wrote " + author.writing.Length.ToString("#,##0") + " characters!");
-            }
-            else if (author.SubAuthors != null)
-            {
-                Console.WriteLine("it delegated to " + author.SubAuthors.Length.ToString("#,##0") + " authors!");
-            }
-            else
-            {
-                Console.WriteLine("NO DECISION MADE! THIS IS A PROBLEM!");
-            }
-
-            //Recursively go through each child
-            if (author.SubAuthors != null)
-            {
-                ToReturn = ToReturn + author.SubAuthors.Length; //Add the IMEDIATE number of authors made by the parent author provided
-                foreach (AuthorNode sub in author.SubAuthors)
-                {
-                    int AuthorsMadeByThisSub = await RecursiveWorkAsync(sub, depth + 1); //And then also factor in the count of the subs each sub of this parent author made
-                    ToReturn = ToReturn + AuthorsMadeByThisSub;
-                }
-            }
-            
-            //Return the total # of authors made (and recursively)
-            return ToReturn;
-        }
     }
 }
