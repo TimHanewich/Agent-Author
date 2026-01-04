@@ -25,11 +25,18 @@ namespace AgentAuthor
                 return;
             }
 
+            //Set up variables for tracking statistics
+            DateTime StartedAt = DateTime.Now;
+            int CumulativeInputTokensConsumed = 0;
+            int CumulativeOutputTokensConsumed = 0;
+
             //Create the book plan
             Console.WriteLine();
             Console.Write("Planning book structure... ");
             Book b = new Book();
-            await b.PlanBookAsync(desc);
+            InferenceResult BookPlanningConsumption = await b.PlanBookAsync(desc);
+            CumulativeInputTokensConsumed = CumulativeInputTokensConsumed + BookPlanningConsumption.InputTokensConsumed;
+            CumulativeOutputTokensConsumed = CumulativeOutputTokensConsumed + BookPlanningConsumption.OutputTokensConsumed;
             Console.WriteLine("Done! " + b.Chapters.Length.ToString() + " chapters planned.");
             Console.WriteLine();
             Console.WriteLine("Book Title: " + b.Title);
@@ -45,24 +52,37 @@ namespace AgentAuthor
             foreach (Chapter chap in b.Chapters)
             {
                 Console.Write("Planning structure for chapter '" + chap.Title + "'... ");
-                await chap.PlanChapterAsync(b);
+                InferenceResult ChapterPlanningConsumption = await chap.PlanChapterAsync(b);
+                CumulativeInputTokensConsumed = CumulativeInputTokensConsumed + ChapterPlanningConsumption.InputTokensConsumed;
+                CumulativeOutputTokensConsumed = CumulativeOutputTokensConsumed + ChapterPlanningConsumption.OutputTokensConsumed;
                 Console.WriteLine(chap.Sections.Length.ToString() + " sections planned.");
 
                 //Write each section
                 foreach (Section sect in chap.Sections)
                 {
                     Console.Write("Writing section '" + sect.Heading + "'... ");
-                    await sect.WriteAsync(chap, b);
+                    InferenceResult SectionWritingConsumption = await sect.WriteAsync(chap, b);
+                    CumulativeInputTokensConsumed = CumulativeInputTokensConsumed + SectionWritingConsumption.InputTokensConsumed;
+                    CumulativeOutputTokensConsumed = CumulativeOutputTokensConsumed + SectionWritingConsumption.OutputTokensConsumed;
                     Console.WriteLine(sect.Content.Length.ToString("#,##0") + " characters written!");
                 }
                 Console.WriteLine();
             }
+
+            //Stop the clock
+            TimeSpan ElapsedInferenceTime = DateTime.Now - StartedAt;
 
             //Export it
             string ExportPath = @"C:\Users\timh\Downloads\Agent-Author\export.md";
             Console.Write("Exporting... ");
             ExportBook(b, ExportPath);
             Console.WriteLine("Exported!");
+
+            //Print statistics
+            Console.WriteLine();
+            Console.WriteLine("Elapsed inference time: " + ElapsedInferenceTime.TotalMinutes.ToString("#,##0.0") + " minutes.");
+            Console.WriteLine("Cumulative Input Tokens: " + CumulativeInputTokensConsumed.ToString("#,##0"));
+            Console.WriteLine("Cumulative Output Tokens Consumed: " + CumulativeOutputTokensConsumed.ToString("#,##0"));
         }
 
         public static void ExportBook(Book b, string ExportPath)
