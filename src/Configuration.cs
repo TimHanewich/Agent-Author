@@ -10,7 +10,7 @@ namespace AgentAuthor
 
         public Configuration()
         {
-            Foundry = new FoundryResource("");
+            Foundry = new FoundryResource("https://example.services.ai.azure.com");
             ModelName = "";
         }
 
