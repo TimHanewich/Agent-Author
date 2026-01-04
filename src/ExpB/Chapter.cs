@@ -2,7 +2,7 @@ using System;
 using TimHanewich.Foundry.OpenAI.Responses;
 using Newtonsoft.Json.Linq;
 
-namespace AgentAuthor.ExpB.Results
+namespace AgentAuthor
 {
     public class Chapter
     {
